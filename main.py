@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher, Router, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 
-# 👇 ВСТАВЬ СВОЙ ТОКЕН СЮДА
+# 👇 ВСТАВЬ СВОЙ НОВЫЙ ТОКЕН СЮДА
 TOKEN = "9003918789:AAFQCOXzx9MsHuUOXPWlEf047N8w2I6h-Sw"
 # 👇 ТВОЯ ССЫЛКА ИЗ RAILWAY (должна быть https://...)
 WEBAPP_URL = "https://hambot-production.up.railway.app" 
@@ -34,18 +34,18 @@ HTML_PAGE = """
         .header span { color: white; font-weight: 800; display: block; font-size: 18px; margin-top: 4px; }
 
         /* Экран */
-        .screen { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; overflow-y: auto; }
+        .screen { flex: 1; display: none; flex-direction: column; align-items: center; padding: 20px; position: relative; overflow-y: auto; }
         .screen.active { display: flex; }
 
         /* Кликер */
-        .balance { font-size: 48px; font-weight: 800; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .balance { font-size: 48px; font-weight: 800; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-top: 20px;}
         .sub-balance { font-size: 16px; color: #a0a0a0; margin-bottom: 30px; }
         
-        .circle-container { position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; margin-top: 10px; }
+        .circle-container { position: relative; width: 260px; height: 260px; display: flex; justify-content: center; align-items: center; margin-top: 10px; }
         .glow-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, #ffd700, #ff8c00, #ffd700); animation: spin 3s linear infinite; filter: blur(10px); opacity: 0.8; }
         
         /* Кнопка с хомяком */
-        .hamster-btn { position: relative; width: 260px; height: 260px; border-radius: 50%; background: #1e1e1e; border: 4px solid #2a2a2a; display: flex; justify-content: center; align-items: center; font-size: 130px; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); z-index: 2; }
+        .hamster-btn { position: relative; width: 240px; height: 240px; border-radius: 50%; background: #1e1e1e; border: 4px solid #2a2a2a; display: flex; justify-content: center; align-items: center; font-size: 120px; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); z-index: 2; }
         .hamster-btn:active { transform: scale(0.92); }
         
         /* Всплывающие монеты */
@@ -54,24 +54,40 @@ HTML_PAGE = """
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* Прогресс-бар */
-        .progress-container { width: 90%; margin-top: 40px; }
+        .progress-container { width: 90%; margin-top: 30px; }
         .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 8px; }
         .progress-bg { width: 100%; height: 12px; background: #2a2a2a; border-radius: 6px; overflow: hidden; }
         .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); border-radius: 6px; transition: width 0.3s; }
 
         /* Карточки (вкладки) */
-        .menu { display: flex; flex-direction: column; width: 100%; gap: 15px; }
+        .menu { display: flex; flex-direction: column; width: 100%; gap: 15px; margin-top: 20px;}
         .card { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; text-align: center; }
         .card h2 { font-size: 20px; margin-bottom: 10px; }
         .card p { font-size: 14px; color: #a0a0a0; margin-bottom: 15px; }
         .btn { background: #ffd700; color: black; font-weight: 800; border: none; padding: 15px 20px; border-radius: 12px; font-size: 16px; cursor: pointer; width: 100%; transition: 0.2s; }
         .btn:active { background: #ffb700; transform: scale(0.98); }
+        .btn:disabled { background: #2a2a2a; color: #666; cursor: not-allowed; transform: none; }
         
+        /* Ежедневный бонус */
+        .bonus-box { font-size: 100px; margin: 10px 0; cursor: pointer; transition: transform 0.2s; }
+        .bonus-box:active { transform: scale(1.1); }
+        .timer-text { font-size: 14px; color: #ffd700; margin-top: 10px; font-weight: 600; }
+
+        /* МАГАЗИН */
+        .shop-item { display: flex; align-items: center; justify-content: space-between; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 12px; padding: 10px 15px; margin-bottom: 10px; }
+        .shop-emoji { font-size: 40px; }
+        .shop-info { flex: 1; margin-left: 15px; text-align: left; }
+        .shop-info h3 { font-size: 16px; margin-bottom: 4px; }
+        .shop-info p { font-size: 12px; color: #ffd700; font-weight: 800; }
+        .buy-btn { width: auto; padding: 10px 15px; font-size: 14px; border-radius: 8px; }
+        .equip-btn { background: #00b894; color: white; }
+        .equipped-btn { background: #2a2a2a; color: #666; }
+
         /* Нижнее меню */
-        .nav-bar { display: flex; justify-content: space-around; padding: 15px 10px; background: #1a1a1a; border-top: 1px solid #2a2a2a; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: #666; cursor: pointer; transition: 0.2s; }
+        .nav-bar { display: flex; justify-content: space-around; padding: 15px 5px; background: #1a1a1a; border-top: 1px solid #2a2a2a; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #666; cursor: pointer; transition: 0.2s; width: 20%; }
         .nav-item.active { color: #ffd700; }
-        .nav-item span { font-size: 24px; margin-bottom: 4px; }
+        .nav-item span { font-size: 22px; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -103,7 +119,28 @@ HTML_PAGE = """
         </div>
     </div>
 
-    <!-- Экран 2: Друзья -->
+    <!-- Экран 2: Ежедневный бонус -->
+    <div id="screen-games" class="screen">
+        <div class="menu">
+            <div class="card">
+                <h2>🎁 Ежедневный подарок</h2>
+                <p>Открывай раз в 24 часа и получай от 1 000 до 5 000 монет!</p>
+                <div class="bonus-box" id="daily-box" onclick="openDailyBox()">🎁</div>
+                <button class="btn" id="btn-daily" onclick="openDailyBox()">Открыть подарок</button>
+                <p class="timer-text" id="timer-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран 3: Магазин -->
+    <div id="screen-shop" class="screen">
+        <h2 style="margin-bottom: 15px; font-weight: 800;">Магазин скинов</h2>
+        <div style="width: 100%;" id="shop-list">
+            <!-- Сюда JS будет добавлять товары -->
+        </div>
+    </div>
+
+    <!-- Экран 4: Друзья -->
     <div id="screen-friends" class="screen">
         <div class="menu">
             <div class="card">
@@ -118,7 +155,7 @@ HTML_PAGE = """
         </div>
     </div>
 
-    <!-- Экран 3: Бусты -->
+    <!-- Экран 5: Бусты -->
     <div id="screen-boosts" class="screen">
         <div class="menu">
             <div class="card">
@@ -129,23 +166,13 @@ HTML_PAGE = """
         </div>
     </div>
 
-    <!-- Экран 4: Кошелек -->
-    <div id="screen-wallet" class="screen">
-        <div class="menu">
-            <div class="card">
-                <h2>💎 Кошелек</h2>
-                <p>Вывод средств появится в следующем обновлении!</p>
-                <button class="btn" style="background:#2a2a2a; color:white;">Скоро...</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Нижнее меню -->
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('mine', this)"><span>🏠</span>Майнинг</div>
+        <div class="nav-item" onclick="switchTab('games', this)"><span>🎁</span>Бонус</div>
+        <div class="nav-item" onclick="switchTab('shop', this)"><span>🛒</span>Магазин</div>
         <div class="nav-item" onclick="switchTab('friends', this)"><span>👥</span>Друзья</div>
         <div class="nav-item" onclick="switchTab('boosts', this)"><span>🚀</span>Бусты</div>
-        <div class="nav-item" onclick="switchTab('wallet', this)"><span>💎</span>Кошелек</div>
     </div>
 
     <script>
@@ -153,8 +180,17 @@ HTML_PAGE = """
         tg.expand();
         tg.ready();
 
-        // Эмодзи для разных уровней
-        const emojis = ["🐹", "🐭", "🦦", "🦫", "🐻", "🦁", "👑"];
+        // Скины для магазина
+        const skins = [
+            { id: "default", name: "Обычный хомяк", emoji: "🐹", price: 0 },
+            { id: "rich", name: "Богатый хомяк", emoji: "🤑", price: 50000 },
+            { id: "ninja", name: "Хомяк-Ниндзя", emoji: "🥷", price: 500000 },
+            { id: "king", name: "Король хомяков", emoji: "👑", price: 5000000 },
+            { id: "cyborg", name: "Кибер-хомяк", emoji: "🤖", price: 100000000 }
+        ];
+
+        // Базовые эмодзи для уровней (если не надет скин)
+        const levelEmojis = ["🐹", "🐭", "🦦", "🦫", "🐻", "🦁"];
 
         let state = {
             balance: 0,
@@ -163,7 +199,10 @@ HTML_PAGE = """
             tapsRequired: 100,
             tapPower: 1,
             friends: 0,
-            boostCost: 1000
+            boostCost: 1000,
+            lastDaily: 0,
+            inventory: ["default"], // Купленные скины
+            equippedSkin: "default" // Надетый скин
         };
 
         let uid = tg.initDataUnsafe?.user?.id || 12345;
@@ -174,6 +213,9 @@ HTML_PAGE = """
             .then(data => {
                 if(data && data.balance !== undefined) {
                     state = Object.assign(state, data);
+                    // Защита для старых сохранений (если вдруг нет полей магазина)
+                    if (!state.inventory) state.inventory = ["default"];
+                    if (!state.equippedSkin) state.equippedSkin = "default";
                 }
                 updateUI();
             })
@@ -192,12 +234,19 @@ HTML_PAGE = """
             if(percent > 100) percent = 100;
             document.getElementById('progress-bar').style.width = percent + "%";
 
-            // Меняем эмодзи в зависимости от уровня
-            let idx = Math.min(state.level - 1, emojis.length - 1);
-            let ham = document.getElementById('hamster');
-            if(ham.innerText !== emojis[idx]) {
-                ham.innerText = emojis[idx];
+            // Установка хомяка (Если куплен скин - ставим его, иначе - по уровню)
+            let activeEmoji = "🐹";
+            if (state.equippedSkin && state.equippedSkin !== "default") {
+                let skin = skins.find(s => s.id === state.equippedSkin);
+                if (skin) activeEmoji = skin.emoji;
+            } else {
+                let idx = Math.min(state.level - 1, levelEmojis.length - 1);
+                activeEmoji = levelEmojis[idx];
             }
+            document.getElementById('hamster').innerText = activeEmoji;
+
+            updateDailyUI();
+            renderShop();
         }
 
         // Клик
@@ -224,16 +273,17 @@ HTML_PAGE = """
             updateUI();
         }, {passive: false});
 
-        // Сохранение каждые 3 секунды
-        setInterval(() => {
+        // СОХРАНЕНИЕ
+        function saveGame() {
             fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: uid, data: state })
             });
-        }, 3000);
+        }
+        setInterval(saveGame, 3000);
 
-        // Вкладки
+        // ВКЛАДКИ
         function switchTab(tabId, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -241,13 +291,113 @@ HTML_PAGE = """
             el.classList.add('active');
         }
 
-        // Приглашение
+        // ===== МАГАЗИН =====
+        function renderShop() {
+            let container = document.getElementById('shop-list');
+            container.innerHTML = ""; // Очищаем
+
+            skins.forEach(skin => {
+                let owned = state.inventory.includes(skin.id);
+                let equipped = state.equippedSkin === skin.id;
+                
+                let btnHtml = "";
+                if (equipped) {
+                    btnHtml = `<button class="btn buy-btn equipped-btn" disabled>Надет</button>`;
+                } else if (owned) {
+                    btnHtml = `<button class="btn buy-btn equip-btn" onclick="equipSkin('${skin.id}')">Надеть</button>`;
+                } else {
+                    btnHtml = `<button class="btn buy-btn" onclick="buySkin('${skin.id}', ${skin.price})">${skin.price.toLocaleString()} 💰</button>`;
+                }
+
+                let item = document.createElement('div');
+                item.className = 'shop-item';
+                item.innerHTML = `
+                    <div class="shop-emoji">${skin.emoji}</div>
+                    <div class="shop-info">
+                        <h3>${skin.name}</h3>
+                        <p>${owned ? "Куплено" : "Не куплено"}</p>
+                    </div>
+                    ${btnHtml}
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function buySkin(id, price) {
+            if (state.balance >= price) {
+                state.balance -= price;
+                state.inventory.push(id);
+                state.equippedSkin = id; // Сразу надеваем при покупке
+                tg.showAlert("🛍️ Покупка успешна! Скин надет.");
+                updateUI();
+                saveGame();
+            } else {
+                tg.showAlert("❌ Недостаточно монет для покупки!");
+            }
+        }
+
+        function equipSkin(id) {
+            state.equippedSkin = id;
+            updateUI();
+            saveGame();
+            tg.showAlert("✅ Скин надет!");
+        }
+
+        // ===== ЕЖЕДНЕВНЫЙ БОНУС =====
+        function updateDailyUI() {
+            let now = Date.now();
+            let cooldown = 24 * 60 * 60 * 1000; 
+            let timePassed = now - state.lastDaily;
+            
+            let btn = document.getElementById('btn-daily');
+            let timerText = document.getElementById('timer-text');
+            let box = document.getElementById('daily-box');
+
+            if (timePassed >= cooldown) {
+                btn.disabled = false;
+                btn.innerText = "Открыть подарок 🎁";
+                timerText.innerText = "Подарок доступен!";
+                timerText.style.color = "#ffd700";
+                box.innerText = "🎁";
+            } else {
+                let remaining = cooldown - timePassed;
+                let hours = Math.floor(remaining / (1000 * 60 * 60));
+                let minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                
+                btn.disabled = true;
+                btn.innerText = "Уже открыто";
+                timerText.innerText = `Следующий через: ${hours}ч ${minutes}м ${seconds}с`;
+                timerText.style.color = "#a0a0a0";
+                box.innerText = "🔒";
+            }
+        }
+        setInterval(updateDailyUI, 1000);
+
+        function openDailyBox() {
+            let now = Date.now();
+            let cooldown = 24 * 60 * 60 * 1000;
+            
+            if (now - state.lastDaily >= cooldown) {
+                let reward = Math.floor(Math.random() * 4000) + 1000; 
+                state.balance += reward;
+                state.lastDaily = now;
+                
+                tg.showAlert(`🎉 Ура! Ты нашел ${reward} монет в подарке!`);
+                updateUI();
+                saveGame();
+            } else {
+                tg.showAlert("⏳ Ты уже открыл подарок сегодня. Приходи завтра!");
+            }
+        }
+
+        // ПРИГЛАШЕНИЕ
         function inviteFriend() {
             let refLink = "https://t.me/" + tg.initDataUnsafe.bot_username + "?start=" + uid;
             tg.openTelegramLink("https://t.me/share/url?url=" + refLink + "&text=Залетай в игру, там реально платят!");
         }
 
-        // Буст
+        // БУСТ
         function buyBoost() {
             if(state.balance >= state.boostCost) {
                 state.balance -= state.boostCost;
@@ -255,6 +405,7 @@ HTML_PAGE = """
                 state.boostCost = Math.floor(state.boostCost * 2.5);
                 tg.showAlert("🚀 Буст куплен! Теперь за клик дают +" + state.tapPower);
                 updateUI();
+                saveGame();
             } else {
                 tg.showAlert("❌ Недостаточно монет!");
             }
@@ -272,7 +423,12 @@ async def handle_load(request):
     uid = request.query.get('user_id')
     if uid in users:
         return web.json_response(users[uid])
-    return web.json_response({"balance": 0, "level": 1, "taps": 0, "tapsRequired": 100, "tapPower": 1, "friends": 0, "boostCost": 1000})
+    return web.json_response({
+        "balance": 0, "level": 1, "taps": 0, 
+        "tapsRequired": 100, "tapPower": 1, 
+        "friends": 0, "boostCost": 1000, 
+        "lastDaily": 0, "inventory": ["default"], "equippedSkin": "default"
+    })
 
 async def handle_save(request):
     data = await request.json()
