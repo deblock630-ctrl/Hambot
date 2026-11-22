@@ -307,7 +307,7 @@ HTML_PAGE = """
 
         function checkSecret() {
             let code = document.getElementById('secret-input').value;
-            if (code === "010806") {
+            if (code === "505050") {
                 document.getElementById('nav-admin').style.display = 'flex';
                 closeSecretModal();
                 tg.showAlert("✅ Доступ разрешен! Вкладка Админа открыта.");
