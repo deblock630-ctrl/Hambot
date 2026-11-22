@@ -38,7 +38,7 @@ HTML_PAGE = """
         .screen.active { display: flex; }
 
         /* Кликер */
-        .balance { font-size: 48px; font-weight: 800; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-top: 20px;}
+        .balance { font-size: 48px; font-weight: 800; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-top: 20px; cursor: pointer; }
         .sub-balance { font-size: 16px; color: #a0a0a0; margin-bottom: 30px; }
         
         .circle-container { position: relative; width: 260px; height: 260px; display: flex; justify-content: center; align-items: center; margin-top: 10px; }
@@ -88,6 +88,10 @@ HTML_PAGE = """
         .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #666; cursor: pointer; transition: 0.2s; width: 20%; }
         .nav-item.active { color: #ffd700; }
         .nav-item span { font-size: 22px; margin-bottom: 4px; }
+
+        /* СЕКРЕТНОЕ ОКНО */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
+        .modal input { padding: 15px; font-size: 20px; border-radius: 10px; border: 2px solid #ffd700; text-align: center; background: #1a1a1a; color: white; width: 200px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -100,7 +104,8 @@ HTML_PAGE = """
 
     <!-- Экран 1: Кликер -->
     <div id="screen-mine" class="screen active">
-        <div class="balance" id="balance">0</div>
+        <!-- Секретный клик по балансу -->
+        <div class="balance" id="balance" onclick="secretClick()">0</div>
         <div class="sub-balance">монет</div>
         
         <div class="circle-container" id="click-area">
@@ -135,27 +140,10 @@ HTML_PAGE = """
     <!-- Экран 3: Магазин -->
     <div id="screen-shop" class="screen">
         <h2 style="margin-bottom: 15px; font-weight: 800;">Магазин скинов</h2>
-        <div style="width: 100%;" id="shop-list">
-            <!-- Сюда JS будет добавлять товары -->
-        </div>
+        <div style="width: 100%;" id="shop-list"></div>
     </div>
 
-    <!-- Экран 4: Друзья -->
-    <div id="screen-friends" class="screen">
-        <div class="menu">
-            <div class="card">
-                <h2>👥 Приглашай друзей</h2>
-                <p>За каждого друга ты получаешь <b>+25,000 монет</b> и мощный буст!</p>
-                <button class="btn" onclick="inviteFriend()">Пригласить друга</button>
-            </div>
-            <div class="card">
-                <h2>Твои рефералы</h2>
-                <p>Приглашено друзей: <b id="friends-count">0</b></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Экран 5: Бусты -->
+    <!-- Экран 4: Бусты -->
     <div id="screen-boosts" class="screen">
         <div class="menu">
             <div class="card">
@@ -166,13 +154,33 @@ HTML_PAGE = """
         </div>
     </div>
 
+    <!-- Экран 5: АДМИНКА (Скрыт по умолчанию) -->
+    <div id="screen-admin" class="screen">
+        <h2 style="margin-bottom: 20px; color: #ffd700;">🔧 Админ-панель</h2>
+        <div class="menu">
+            <button class="btn" onclick="adminAddCoins()">💰 Выдать 1 000 000 монет</button>
+            <button class="btn" onclick="adminUnlockSkins()">👑 Открыть все скины</button>
+            <button class="btn" onclick="adminMaxPower()">⚡️ +100 к силе клика</button>
+            <button class="btn" style="background:#e74c3c; color:white;" onclick="adminReset()">🗑 Полный сброс аккаунта</button>
+        </div>
+    </div>
+
     <!-- Нижнее меню -->
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('mine', this)"><span>🏠</span>Майнинг</div>
         <div class="nav-item" onclick="switchTab('games', this)"><span>🎁</span>Бонус</div>
         <div class="nav-item" onclick="switchTab('shop', this)"><span>🛒</span>Магазин</div>
-        <div class="nav-item" onclick="switchTab('friends', this)"><span>👥</span>Друзья</div>
         <div class="nav-item" onclick="switchTab('boosts', this)"><span>🚀</span>Бусты</div>
+        <!-- Секретная кнопка админа -->
+        <div class="nav-item" id="nav-admin" style="display:none;" onclick="switchTab('admin', this)"><span>🔧</span>Админ</div>
+    </div>
+
+    <!-- Модальное окно для ввода кода -->
+    <div id="secret-modal" class="modal">
+        <h2 style="margin-bottom: 20px;">Секретный код</h2>
+        <input type="password" id="secret-input" placeholder="******">
+        <button class="btn" style="width: 200px;" onclick="checkSecret()">Войти</button>
+        <button class="btn" style="width: 200px; background: #2a2a2a; color: white; margin-top: 10px;" onclick="closeSecretModal()">Отмена</button>
     </div>
 
     <script>
@@ -180,7 +188,6 @@ HTML_PAGE = """
         tg.expand();
         tg.ready();
 
-        // Скины для магазина
         const skins = [
             { id: "default", name: "Обычный хомяк", emoji: "🐹", price: 0 },
             { id: "rich", name: "Богатый хомяк", emoji: "🤑", price: 50000 },
@@ -189,7 +196,6 @@ HTML_PAGE = """
             { id: "cyborg", name: "Кибер-хомяк", emoji: "🤖", price: 100000000 }
         ];
 
-        // Базовые эмодзи для уровней (если не надет скин)
         const levelEmojis = ["🐹", "🐭", "🦦", "🦫", "🐻", "🦁"];
 
         let state = {
@@ -201,19 +207,20 @@ HTML_PAGE = """
             friends: 0,
             boostCost: 1000,
             lastDaily: 0,
-            inventory: ["default"], // Купленные скины
-            equippedSkin: "default" // Надетый скин
+            inventory: ["default"],
+            equippedSkin: "default"
         };
 
         let uid = tg.initDataUnsafe?.user?.id || 12345;
+        let secretTapCount = 0;
+        let secretTapTimer = null;
 
-        // Загрузка данных
+        // Загрузка
         fetch('/api/load?user_id=' + uid)
             .then(r => r.json())
             .then(data => {
                 if(data && data.balance !== undefined) {
                     state = Object.assign(state, data);
-                    // Защита для старых сохранений (если вдруг нет полей магазина)
                     if (!state.inventory) state.inventory = ["default"];
                     if (!state.equippedSkin) state.equippedSkin = "default";
                 }
@@ -221,12 +228,10 @@ HTML_PAGE = """
             })
             .catch(e => console.log("Оффлайн режим"));
 
-        // Обновление интерфейса
         function updateUI() {
             document.getElementById('balance').innerText = state.balance.toLocaleString();
             document.getElementById('top-balance').innerText = state.balance.toLocaleString();
             document.getElementById('top-level').innerText = state.level;
-            document.getElementById('friends-count').innerText = state.friends;
             document.getElementById('boost-cost').innerText = state.boostCost.toLocaleString();
             document.getElementById('progress-text').innerText = state.taps + " / " + state.tapsRequired;
             
@@ -234,7 +239,6 @@ HTML_PAGE = """
             if(percent > 100) percent = 100;
             document.getElementById('progress-bar').style.width = percent + "%";
 
-            // Установка хомяка (Если куплен скин - ставим его, иначе - по уровню)
             let activeEmoji = "🐹";
             if (state.equippedSkin && state.equippedSkin !== "default") {
                 let skin = skins.find(s => s.id === state.equippedSkin);
@@ -273,7 +277,6 @@ HTML_PAGE = """
             updateUI();
         }, {passive: false});
 
-        // СОХРАНЕНИЕ
         function saveGame() {
             fetch('/api/save', {
                 method: 'POST',
@@ -283,7 +286,6 @@ HTML_PAGE = """
         }
         setInterval(saveGame, 3000);
 
-        // ВКЛАДКИ
         function switchTab(tabId, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -291,15 +293,82 @@ HTML_PAGE = """
             el.classList.add('active');
         }
 
-        // ===== МАГАЗИН =====
+        // ===== СЕКРЕТНАЯ АДМИНКА =====
+        function secretClick() {
+            secretTapCount++;
+            clearTimeout(secretTapTimer);
+            if (secretTapCount >= 5) {
+                document.getElementById('secret-modal').style.display = 'flex';
+                secretTapCount = 0;
+            } else {
+                secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1500);
+            }
+        }
+
+        function checkSecret() {
+            let code = document.getElementById('secret-input').value;
+            if (code === "010806") {
+                document.getElementById('nav-admin').style.display = 'flex';
+                closeSecretModal();
+                tg.showAlert("✅ Доступ разрешен! Вкладка Админа открыта.");
+            } else {
+                tg.showAlert("❌ Неверный код!");
+            }
+            document.getElementById('secret-input').value = "";
+        }
+
+        function closeSecretModal() {
+            document.getElementById('secret-modal').style.display = 'none';
+        }
+
+        // Админ-функции
+        function adminAddCoins() {
+            state.balance += 1000000;
+            updateUI();
+            saveGame();
+            tg.showAlert("💰 Выдано 1 000 000 монет!");
+        }
+
+        function adminUnlockSkins() {
+            skins.forEach(s => {
+                if (!state.inventory.includes(s.id)) state.inventory.push(s.id);
+            });
+            updateUI();
+            saveGame();
+            tg.showAlert("👑 Все скины открыты!");
+        }
+
+        function adminMaxPower() {
+            state.tapPower += 100;
+            updateUI();
+            saveGame();
+            tg.showAlert("⚡️ Сила клика увеличена на +100!");
+        }
+
+        function adminReset() {
+            state.balance = 0;
+            state.level = 1;
+            state.taps = 0;
+            state.tapsRequired = 100;
+            state.tapPower = 1;
+            state.friends = 0;
+            state.boostCost = 1000;
+            state.lastDaily = 0;
+            state.inventory = ["default"];
+            state.equippedSkin = "default";
+            updateUI();
+            saveGame();
+            tg.showAlert("🗑 Аккаунт полностью сброшен!");
+        }
+        // =============================
+
+        // ... (остальной код магазина, бонуса и бустов остается без изменений)
         function renderShop() {
             let container = document.getElementById('shop-list');
-            container.innerHTML = ""; // Очищаем
-
+            container.innerHTML = "";
             skins.forEach(skin => {
                 let owned = state.inventory.includes(skin.id);
                 let equipped = state.equippedSkin === skin.id;
-                
                 let btnHtml = "";
                 if (equipped) {
                     btnHtml = `<button class="btn buy-btn equipped-btn" disabled>Надет</button>`;
@@ -308,7 +377,6 @@ HTML_PAGE = """
                 } else {
                     btnHtml = `<button class="btn buy-btn" onclick="buySkin('${skin.id}', ${skin.price})">${skin.price.toLocaleString()} 💰</button>`;
                 }
-
                 let item = document.createElement('div');
                 item.className = 'shop-item';
                 item.innerHTML = `
@@ -327,7 +395,7 @@ HTML_PAGE = """
             if (state.balance >= price) {
                 state.balance -= price;
                 state.inventory.push(id);
-                state.equippedSkin = id; // Сразу надеваем при покупке
+                state.equippedSkin = id;
                 tg.showAlert("🛍️ Покупка успешна! Скин надет.");
                 updateUI();
                 saveGame();
@@ -343,12 +411,10 @@ HTML_PAGE = """
             tg.showAlert("✅ Скин надет!");
         }
 
-        // ===== ЕЖЕДНЕВНЫЙ БОНУС =====
         function updateDailyUI() {
             let now = Date.now();
             let cooldown = 24 * 60 * 60 * 1000; 
             let timePassed = now - state.lastDaily;
-            
             let btn = document.getElementById('btn-daily');
             let timerText = document.getElementById('timer-text');
             let box = document.getElementById('daily-box');
@@ -364,7 +430,6 @@ HTML_PAGE = """
                 let hours = Math.floor(remaining / (1000 * 60 * 60));
                 let minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
                 let seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-                
                 btn.disabled = true;
                 btn.innerText = "Уже открыто";
                 timerText.innerText = `Следующий через: ${hours}ч ${minutes}м ${seconds}с`;
@@ -377,12 +442,10 @@ HTML_PAGE = """
         function openDailyBox() {
             let now = Date.now();
             let cooldown = 24 * 60 * 60 * 1000;
-            
             if (now - state.lastDaily >= cooldown) {
                 let reward = Math.floor(Math.random() * 4000) + 1000; 
                 state.balance += reward;
                 state.lastDaily = now;
-                
                 tg.showAlert(`🎉 Ура! Ты нашел ${reward} монет в подарке!`);
                 updateUI();
                 saveGame();
@@ -391,13 +454,6 @@ HTML_PAGE = """
             }
         }
 
-        // ПРИГЛАШЕНИЕ
-        function inviteFriend() {
-            let refLink = "https://t.me/" + tg.initDataUnsafe.bot_username + "?start=" + uid;
-            tg.openTelegramLink("https://t.me/share/url?url=" + refLink + "&text=Залетай в игру, там реально платят!");
-        }
-
-        // БУСТ
         function buyBoost() {
             if(state.balance >= state.boostCost) {
                 state.balance -= state.boostCost;
@@ -439,14 +495,6 @@ async def handle_save(request):
 # ===== БОТ =====
 @router.message(Command("start"))
 async def cmd_start(message: Message):
-    args = message.text.split()
-    if len(args) > 1:
-        inviter_id = args[1]
-        if inviter_id in users and str(message.from_user.id) not in users:
-            users[inviter_id]["balance"] += 25000
-            users[inviter_id]["friends"] += 1
-            await message.answer("🎁 Ты пришел по приглашению! Твой друг получил бонус.")
-
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🐹 Играть", web_app=WebAppInfo(url=WEBAPP_URL))]
     ])
