@@ -230,7 +230,7 @@ HTML_PAGE = """
             { id: "t3", name: "Пригласить друга", goal: 1, type: "friends", reward: 100000 }
         ];
 
-        const levelEmojis = ["🎃", "🎃🔥", "🕯️", "👻", "🧙‍♂️", "👑"];
+        const levelEmojis = ["🎃", "🔥", "🕯️", "👻", "🧙‍♂️", "👑"];
 
         let state = {
             balance: 0, level: 1, taps: 0, tapsRequired: 100, tapPower: 1, 
