@@ -1,6 +1,5 @@
 import asyncio
 import os
-import random
 from aiohttp import web
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
@@ -45,10 +44,9 @@ HTML_PAGE = """
         .circle-container { position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; margin-top: 10px; }
         .glow-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, #ffd700, #ff8c00, #ffd700); animation: spin 3s linear infinite; filter: blur(10px); opacity: 0.8; }
         
-        /* Кнопка с фото */
-        .hamster-btn { position: relative; width: 260px; height: 260px; border-radius: 50%; background: #1e1e1e; border: 4px solid #2a2a2a; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); z-index: 2; overflow: hidden; }
+        /* Кнопка с хомяком */
+        .hamster-btn { position: relative; width: 260px; height: 260px; border-radius: 50%; background: #1e1e1e; border: 4px solid #2a2a2a; display: flex; justify-content: center; align-items: center; font-size: 130px; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); z-index: 2; }
         .hamster-btn:active { transform: scale(0.92); }
-        .hamster-img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         
         /* Всплывающие монеты */
         .coin-anim { position: absolute; font-size: 24px; font-weight: 800; color: #ffd700; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 10; text-shadow: 0 0 5px black; }
@@ -91,10 +89,7 @@ HTML_PAGE = """
         
         <div class="circle-container" id="click-area">
             <div class="glow-ring"></div>
-            <div class="hamster-btn">
-                <!-- Сюда подставляется фотка из интернета -->
-                <img id="hamster-img" class="hamster-img" src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?auto=format&fit=crop&w=400&q=80">
-            </div>
+            <div class="hamster-btn" id="hamster">🐹</div>
         </div>
 
         <div class="progress-container">
@@ -158,18 +153,9 @@ HTML_PAGE = """
         tg.expand();
         tg.ready();
 
-        // Ссылки на фотографии хомяков для каждого уровня
-        const images = [
-            "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?auto=format&fit=crop&w=400&q=80", // Уровень 1
-            "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=400&q=80", // Уровень 2
-            "https://images.unsplash.com/photo-1612580979058-96276b4c93ac?auto=format&fit=crop&w=400&q=80", // Уровень 3
-            "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=400&q=80", // Уровень 4
-            "https://images.unsplash.com/photo-1535546204504-3b7b2a81c1c2?auto=format&fit=crop&w=400&q=80", // Уровень 5
-            "https://images.unsplash.com/photo-1602073900721-2297822678e8?auto=format&fit=crop&w=400&q=80", // Уровень 6
-            "https://images.unsplash.com/photo-1538094287293-1d6a47ac8819?auto=format&fit=crop&w=400&q=80"  // Уровень 7 (Босс)
-        ];
+        // Эмодзи для разных уровней
+        const emojis = ["🐹", "🐭", "🦦", "🦫", "🐻", "🦁", "👑"];
 
-        // Состояние игрока
         let state = {
             balance: 0,
             level: 1,
@@ -206,15 +192,11 @@ HTML_PAGE = """
             if(percent > 100) percent = 100;
             document.getElementById('progress-bar').style.width = percent + "%";
 
-            // Меняем фотку в зависимости от уровня
-            let idx = Math.min(state.level - 1, images.length - 1);
-            let imgElement = document.getElementById('hamster-img');
-            
-            if (imgElement.src !== images[idx]) {
-                imgElement.src = images[idx];
-                // Небольшая анимация при смене фото
-                imgElement.style.transform = "scale(0.8)";
-                setTimeout(() => imgElement.style.transform = "scale(1)", 200);
+            // Меняем эмодзи в зависимости от уровня
+            let idx = Math.min(state.level - 1, emojis.length - 1);
+            let ham = document.getElementById('hamster');
+            if(ham.innerText !== emojis[idx]) {
+                ham.innerText = emojis[idx];
             }
         }
 
@@ -231,7 +213,6 @@ HTML_PAGE = """
                 tg.showAlert("🎉 НОВЫЙ УРОВЕНЬ! Твой хомяк вырос!");
             }
 
-            let rect = document.getElementById('click-area').getBoundingClientRect();
             let coin = document.createElement('div');
             coin.className = 'coin-anim';
             coin.innerText = "+" + state.tapPower;
@@ -243,7 +224,7 @@ HTML_PAGE = """
             updateUI();
         }, {passive: false});
 
-        // Сохранение
+        // Сохранение каждые 3 секунды
         setInterval(() => {
             fetch('/api/save', {
                 method: 'POST',
@@ -301,7 +282,7 @@ async def handle_save(request):
 
 # ===== БОТ =====
 @router.message(Command("start"))
-async def cmd_start(message: Message, command: Command):
+async def cmd_start(message: Message):
     args = message.text.split()
     if len(args) > 1:
         inviter_id = args[1]
