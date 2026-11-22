@@ -7,7 +7,7 @@ from aiogram.filters import Command
 # 👇 ВСТАВЬ ТОКЕН
 TOKEN = "9003918789:AAFQCOXzx9MsHuUOXPWlEf047N8w2I6h-Sw"
 # 👇 СЮДА ВСТАВИШЬ ССЫЛКУ НА САЙТ (когда задеплоишь на Railway)
-WEBAPP_URL = "https://твой-сайт.up.railway.app" 
+WEBAPP_URL = "hambot-production.up.railway.app"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
