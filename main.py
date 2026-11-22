@@ -6,15 +6,15 @@ from aiogram import Bot, Dispatcher, Router, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 
-# 👇 ВСТАВЬ СВОЙ НОВЫЙ ТОКЕН СЮДА
-TOKEN = "9003918789:AAFQCOXzx9MsHuUOXPWlEf047N8w2I6h-Sw"
+# 👇 ВСТАВЬ СВОЙ ТОКЕН СЮДА
+TOKEN = "ТВОЙ_ТОКЕН_ОТ_BOTFATHER"
 # 👇 ТВОЯ ССЫЛКА ИЗ RAILWAY (должна быть https://...)
 WEBAPP_URL = "https://hambot-production.up.railway.app" 
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 router = Router()
-users = {} # Временная база данных (живет пока работает сервер)
+users = {} 
 
 HTML_PAGE = """
 <!DOCTYPE html>
@@ -26,7 +26,7 @@ HTML_PAGE = """
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background-color: #121212; color: white; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
         /* Верхняя панель */
@@ -35,20 +35,23 @@ HTML_PAGE = """
         .header span { color: white; font-weight: 800; display: block; font-size: 18px; margin-top: 4px; }
 
         /* Экран */
-        .screen { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
+        .screen { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; overflow-y: auto; }
         .screen.active { display: flex; }
 
         /* Кликер */
         .balance { font-size: 48px; font-weight: 800; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
         .sub-balance { font-size: 16px; color: #a0a0a0; margin-bottom: 30px; }
         
-        .circle-container { position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; }
-        .glow-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, #ffd700, #ff8c00, #ffd700); animation: spin 3s linear infinite; filter: blur(8px); opacity: 0.7; }
-        .hamster-btn { position: relative; width: 260px; height: 260px; border-radius: 50%; background: #1e1e1e; border: 4px solid #2a2a2a; display: flex; justify-content: center; align-items: center; font-size: 120px; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); z-index: 2; }
+        .circle-container { position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; margin-top: 10px; }
+        .glow-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, #ffd700, #ff8c00, #ffd700); animation: spin 3s linear infinite; filter: blur(10px); opacity: 0.8; }
+        
+        /* Кнопка с фото */
+        .hamster-btn { position: relative; width: 260px; height: 260px; border-radius: 50%; background: #1e1e1e; border: 4px solid #2a2a2a; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); z-index: 2; overflow: hidden; }
         .hamster-btn:active { transform: scale(0.92); }
+        .hamster-img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         
         /* Всплывающие монеты */
-        .coin-anim { position: absolute; font-size: 24px; font-weight: 800; color: #ffd700; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 10; }
+        .coin-anim { position: absolute; font-size: 24px; font-weight: 800; color: #ffd700; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 10; text-shadow: 0 0 5px black; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(1.5); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -58,7 +61,7 @@ HTML_PAGE = """
         .progress-bg { width: 100%; height: 12px; background: #2a2a2a; border-radius: 6px; overflow: hidden; }
         .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); border-radius: 6px; transition: width 0.3s; }
 
-        /* Вкладки */
+        /* Карточки (вкладки) */
         .menu { display: flex; flex-direction: column; width: 100%; gap: 15px; }
         .card { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; text-align: center; }
         .card h2 { font-size: 20px; margin-bottom: 10px; }
@@ -88,7 +91,10 @@ HTML_PAGE = """
         
         <div class="circle-container" id="click-area">
             <div class="glow-ring"></div>
-            <div class="hamster-btn" id="hamster">🐹</div>
+            <div class="hamster-btn">
+                <!-- Сюда подставляется фотка из интернета -->
+                <img id="hamster-img" class="hamster-img" src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?auto=format&fit=crop&w=400&q=80">
+            </div>
         </div>
 
         <div class="progress-container">
@@ -149,8 +155,19 @@ HTML_PAGE = """
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Открыть на весь экран
+        tg.expand();
         tg.ready();
+
+        // Ссылки на фотографии хомяков для каждого уровня
+        const images = [
+            "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?auto=format&fit=crop&w=400&q=80", // Уровень 1
+            "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=400&q=80", // Уровень 2
+            "https://images.unsplash.com/photo-1612580979058-96276b4c93ac?auto=format&fit=crop&w=400&q=80", // Уровень 3
+            "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=400&q=80", // Уровень 4
+            "https://images.unsplash.com/photo-1535546204504-3b7b2a81c1c2?auto=format&fit=crop&w=400&q=80", // Уровень 5
+            "https://images.unsplash.com/photo-1602073900721-2297822678e8?auto=format&fit=crop&w=400&q=80", // Уровень 6
+            "https://images.unsplash.com/photo-1538094287293-1d6a47ac8819?auto=format&fit=crop&w=400&q=80"  // Уровень 7 (Босс)
+        ];
 
         // Состояние игрока
         let state = {
@@ -164,9 +181,8 @@ HTML_PAGE = """
         };
 
         let uid = tg.initDataUnsafe?.user?.id || 12345;
-        let username = tg.initDataUnsafe?.user?.username || "player";
 
-        // Загрузка данных при старте
+        // Загрузка данных
         fetch('/api/load?user_id=' + uid)
             .then(r => r.json())
             .then(data => {
@@ -177,7 +193,7 @@ HTML_PAGE = """
             })
             .catch(e => console.log("Оффлайн режим"));
 
-        // Функция обновления интерфейса
+        // Обновление интерфейса
         function updateUI() {
             document.getElementById('balance').innerText = state.balance.toLocaleString();
             document.getElementById('top-balance').innerText = state.balance.toLocaleString();
@@ -190,28 +206,32 @@ HTML_PAGE = """
             if(percent > 100) percent = 100;
             document.getElementById('progress-bar').style.width = percent + "%";
 
-            // Меняем хомяка в зависимости от уровня
-            let hamsters = ["🐹", "🐭", "🦦", "🦫", "🦈", "🐳", "👑"];
-            let idx = Math.min(state.level - 1, hamsters.length - 1);
-            document.getElementById('hamster').innerText = hamsters[idx];
+            // Меняем фотку в зависимости от уровня
+            let idx = Math.min(state.level - 1, images.length - 1);
+            let imgElement = document.getElementById('hamster-img');
+            
+            if (imgElement.src !== images[idx]) {
+                imgElement.src = images[idx];
+                // Небольшая анимация при смене фото
+                imgElement.style.transform = "scale(0.8)";
+                setTimeout(() => imgElement.style.transform = "scale(1)", 200);
+            }
         }
 
-        // Обработка клика
+        // Клик
         document.getElementById('click-area').addEventListener('touchstart', function(e) {
             e.preventDefault();
             state.balance += state.tapPower;
             state.taps += 1;
             
-            // Проверка на новый уровень
             if (state.taps >= state.tapsRequired) {
                 state.taps = 0;
                 state.level += 1;
-                state.tapsRequired *= 10; // Каждый раз в 10 раз больше
-                tg.showAlert("🎉 НОВЫЙ УРОВЕНЬ! Твой хомяк прокачался!");
+                state.tapsRequired *= 10; 
+                tg.showAlert("🎉 НОВЫЙ УРОВЕНЬ! Твой хомяк вырос!");
             }
 
-            // Анимация монетки
-            let rect = document.getElementById('hamster').getBoundingClientRect();
+            let rect = document.getElementById('click-area').getBoundingClientRect();
             let coin = document.createElement('div');
             coin.className = 'coin-anim';
             coin.innerText = "+" + state.tapPower;
@@ -223,7 +243,7 @@ HTML_PAGE = """
             updateUI();
         }, {passive: false});
 
-        // Сохранение на сервер (каждые 3 секунды)
+        // Сохранение
         setInterval(() => {
             fetch('/api/save', {
                 method: 'POST',
@@ -232,7 +252,7 @@ HTML_PAGE = """
             });
         }, 3000);
 
-        // Переключение вкладок
+        // Вкладки
         function switchTab(tabId, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -240,18 +260,18 @@ HTML_PAGE = """
             el.classList.add('active');
         }
 
-        // Приглашение друга
+        // Приглашение
         function inviteFriend() {
             let refLink = "https://t.me/" + tg.initDataUnsafe.bot_username + "?start=" + uid;
             tg.openTelegramLink("https://t.me/share/url?url=" + refLink + "&text=Залетай в игру, там реально платят!");
         }
 
-        // Покупка буста
+        // Буст
         function buyBoost() {
             if(state.balance >= state.boostCost) {
                 state.balance -= state.boostCost;
                 state.tapPower += 1;
-                state.boostCost = Math.floor(state.boostCost * 2.5); // Дорожает
+                state.boostCost = Math.floor(state.boostCost * 2.5);
                 tg.showAlert("🚀 Буст куплен! Теперь за клик дают +" + state.tapPower);
                 updateUI();
             } else {
@@ -263,7 +283,7 @@ HTML_PAGE = """
 </html>
 """
 
-# ===== API ДЛЯ СОХРАНЕНИЯ ДАННЫХ =====
+# ===== API =====
 async def handle_index(request):
     return web.Response(text=HTML_PAGE, content_type='text/html')
 
@@ -282,7 +302,6 @@ async def handle_save(request):
 # ===== БОТ =====
 @router.message(Command("start"))
 async def cmd_start(message: Message, command: Command):
-    # Логика реферальной ссылки (если перешли по ссылке друга)
     args = message.text.split()
     if len(args) > 1:
         inviter_id = args[1]
