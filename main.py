@@ -7,7 +7,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, W
 from aiogram.filters import Command
 
 # 👇 ВСТАВЬ СВОЙ ТОКЕН СЮДА
-TOKEN = "ТВОЙ_ТОКЕН_ОТ_BOTFATHER"
+TOKEN = "9003918789:AAFQCOXzx9MsHuUOXPWlEf047N8w2I6h-Sw"
 # 👇 ТВОЯ ССЫЛКА ИЗ RAILWAY (должна быть https://...)
 WEBAPP_URL = "https://hambot-production.up.railway.app" 
 
